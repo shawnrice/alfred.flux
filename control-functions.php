@@ -74,7 +74,7 @@ function parseTemperature( $temperature ) {
 
 // Time / Date functions
 
-function alterTime( $time ) {
+function dst( $time ) {
   $time = explode( ':', $time );
   if ( date( 'Z' ) ) {
     $time[0] += 1;
@@ -92,8 +92,8 @@ function isDay() {
   // This checks for DST, I think that it shouldn't affect those who aren't in
   // timezones with DST, but, well, let's flag it as a potential problem.
   if ( date( 'Z' ) ) {
-    $sunset = alterTime( $sunset );
-    $sunrise = alterTime( $sunrise );
+    $sunset = dst( $sunset );
+    $sunrise = dst( $sunrise );
   }
 
   // Let's get the local time.
@@ -118,10 +118,24 @@ function getSunrise() {
   // This checks for DST, I think that it shouldn't affect those who aren't in
   // timezones with DST, but, well, let's flag it as a potential problem.
   if ( date( 'Z' ) ) {
-    $sunrise = alterTime( $sunrise );
+    $sunrise = dst( $sunrise );
   }
 
   return $sunrise;
+}
+
+function getSunset() {
+  // Get the sunrise & sunset
+  $now     = time();
+  $sunset = date_sunset( $now );
+
+  // This checks for DST, I think that it shouldn't affect those who aren't in
+  // timezones with DST, but, well, let's flag it as a potential problem.
+  if ( date( 'Z' ) ) {
+    $sunset = dst( $sunset );
+  }
+
+  return $sunset;
 }
 
 function preemptDateErrors() {
@@ -131,9 +145,49 @@ function preemptDateErrors() {
     date_default_timezone_set( $tz );
   }
 
-  $latlong = explode( ',', getPref( 'location', $pref ) );
+  $latlong = explode( ',', getPref( 'location' ) );
   ini_set( 'date.default_latitude',  $latlong[0] );
   ini_set( 'date.default_longitude', $latlong[1] );
 
   return TRUE;
+}
+
+function getFluxTime() {
+  global $pref;
+
+  $sleepLate = getPref( 'sleepLate' );
+  $under18   = getPref( 'under18' );
+  $wakeTime  = getPref( 'wakeTime' );
+  $sunset    = getSunset();
+
+  // Let's get the local time.
+  $time = localtime( time() );
+  $time = $time[1] + ( $time[2] * 60 );
+
+  // Do you want to sleep in on a weekend? And, is it?
+  if ( $sleepLate === 1 ) {
+    $day = date( 'D', time() );
+    if ( $day == 'Sun' || $day == 'Sat' ) {
+      $wakeTime += 60;
+    }
+  }
+
+  // Did you set 'extra hour for kids'?
+  if ( $under18 === 1 )
+    $wakeTime += 60;
+
+  if ( ( $time > $wakeTime ) && ( $time < $sunset ) )
+    return 'day';
+  else if ( ( $time > $wakeTime ) && ( $time > $sunset ) && ( $time < ( $wakeTime - 9 ) ) )
+    return 'sunset';
+  else
+    return 'late';
+
+  // We shouldn't get here, so this is an error.
+  return FALSE;
+
+  // I need to figure out how it takes sunrise into account. I can't do that
+  // until tomorrow when the sun rises... because I don't want to reset my
+  // location data right now.
+
 }

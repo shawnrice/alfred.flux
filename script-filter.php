@@ -41,7 +41,7 @@
  *           --- Not ever going to work:
  *                 (1) Movie Mode
  *                 (2) Disable for this App
- *
+*
 **/
 
 
@@ -197,6 +197,8 @@ $presets = array(
   'Blue Period'       =>  27000
 );
 
+ksort( $presets, SORT_NUMERIC );
+
 $prefs = array(
   'Late Color' => 'lateColorTemp',
   'Night Color' => 'nightColorTemp',
@@ -218,8 +220,7 @@ if ( ! file_exists( $data ) ) {
 }
 
 // Set Timezones and Lat/Lon if not set.
-// This pulls Lat/Lon from F.lux, not from
-// location services.
+// This pulls Lat/Lon from F.lux preferences, not from location services.
 preemptDateErrors();
 
 // Parse {query} if there is one.
@@ -229,7 +230,6 @@ if ( isset( $argv[1] ) ) {
 }
 
 
-
 $dayColorTemp = getPref( 'dayColorTemp', $pref );
 if ( ! $dayColorTemp ) {
   exec( 'defaults write dayColorTemp -integer 6500' );
@@ -237,22 +237,12 @@ if ( ! $dayColorTemp ) {
 }
 $nightColorTemp = getPref( 'nightColorTemp', $pref );
 
-if ( isset( isDay() ) )
+if ( isDay() )
   $currentTemp = $dayColorTemp;
 else
   $currentTemp = $nightColorTemp;
 
-$invert = "osascript -e 'tell application \"System Events\"' -e 'tell application processes' -e 'key code 28 using {command down, option down, control down}' -e 'end tell' -e 'end tell'"
-
-
-
-// echo getPref( 'lateColorTemp', $pref );
-// echo getPref( 'wakeTime', $pref );
-// echo getPref( 'version', $pref );
-// echo getPref( 'location', $pref );
-// echo getPref( 'locationTextField', $pref );
-
-
+$invert = "osascript -e 'tell application \"System Events\"' -e 'tell application processes' -e 'key code 28 using {command down, option down, control down}' -e 'end tell' -e 'end tell'";
 
 // Start Parsing Arguments
 if ( ! isset( $q ) ) {
@@ -287,7 +277,7 @@ if ( strpos( $args[0] , 'set' ) !== FALSE ) {
   $now = shell_exec( 'date +"%s"' );
   if ( count( $args ) > 1 ) {
 
-    if ( ( count( $args ) == 2 ) && ( ! is_numeric( $args[1] ) ) {
+    if ( ( count( $args ) == 2 ) && ( ! is_numeric( $args[1] ) ) ) {
 
     }
 
@@ -299,9 +289,17 @@ if ( strpos( $args[0] , 'set' ) !== FALSE ) {
     $val = 3600; // Sleep for one hour by default
     $msg = "Disable Flux for an hour.";
   }
+} elseif ( strpos( $args[0] , 'col' ) !== FALSE ) {
+  foreach ( $presets as $preset => $temperature ) {
+    if ( isDay() )
+      $now = "Night";
+    else
+      $now = "Day";
+
+    $w->result( '', "color-$preset", "Set $now color to $preset",
+      "(Temperature: $temperature)", '', 'no', '' );
+  }
 } else {
   $w->result( '', 'set', 'Set Preference', '', '', 'no', 'set');
-
 }
-
 echo $w->toxml();
