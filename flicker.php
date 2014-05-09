@@ -16,6 +16,9 @@
 // Fluorescent: 4200K
 // Daylight: 5500K
 
+// $now = `date +"%s"` + date( 'Z' );
+
+
 
 $levels = array(  'dark'     => array( 'lower'  =>        1,
                                       'upper'   =>   200000
@@ -70,11 +73,10 @@ $preset = array( $level , $speed );
 
 // Open a nice blank canvas.
 `open background.html`;
+time_nanosleep( 0, 1000000 );
 // Send the web browser into full screen
-`osascript "canvas.scpt"`;
-`defaults write $HOME/Library/Preferences/org.herf.Flux.plist nightColorTemp -integer 2300`
-
-
+`osascript "open-canvas.scpt"`;
+// `defaults write $HOME/Library/Preferences/org.herf.Flux.plist nightColorTemp -integer 2300`;
 
 // Wait for the transition
 time_nanosleep( 0, 1000000 );
@@ -83,7 +85,7 @@ time_nanosleep( 0, 1000000 );
 flicker( $levels[$preset[0]], $speeds[$preset[1]], $duration );
 
 // Take it out of full screen.
-`osascript "canvas.scpt"`;
+`osascript "close-canvas.scpt"`;
 
 function flicker( $levels = array( 'lower' => 0 , 'upper' => 1000000 ),
   $speed = array( 'lower' => 0, 'upper' => 1000000000 ) , $duration = 250 ) {
@@ -104,7 +106,7 @@ function flicker( $levels = array( 'lower' => 0 , 'upper' => 1000000 ),
         $continue = FALSE;
     }
 
-    if ( mt_rand( 0, 100) > 85 )
+    if ( mt_rand( 0, 100 ) > 85 )
       $speed[ 'lower' ] = 5000;
     else
       $sleep = mt_rand( $speed[ 'lower' ],  $speed[ 'upper' ]  );
@@ -113,6 +115,8 @@ function flicker( $levels = array( 'lower' => 0 , 'upper' => 1000000 ),
       $upper = mt_rand( 1, 100000 );
       if ( $lower > $upper ) {
         $upper = $lower + mt_rand( 100, 10000 );
+        $level = mt_rand( $lower, $upper );
+      } else {
         $level = mt_rand( $lower, $upper );
       }
     }
