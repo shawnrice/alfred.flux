@@ -41,59 +41,45 @@
  *           --- Not ever going to work:
  *                 (1) Movie Mode
  *                 (2) Disable for this App
-*
-**/
-
-
-/**
  *
-  Presets
-  =======
-  These are custom presets that extend the native ones.
-  --- Note: All numbers are in Kelvin.
-  --- [Color Temperature](https://en.wikipedia.org/wiki/Color_temperature)
-    Dark Room             900 --- Note: the transition takes for-damn-ever.
-    Ember                1200
-    Candle               1900
-    Warm Incandescent    2300
-    Incandescent         2700 --- Note: The transition below 3000 is slow.
-    Halogen              3400
-    Fluorescent          4200
-    Daylight             5500
-    Off                  6500
-    Blue Period         27000
-
-    !!! Darkroom also inverts the screen colors, only if you have enabled it via
-    accessibilty.
-
-    Presets from the [F.lux FAQ page](https://justgetflux.com/faq.html):
-    For OSX
-      Candle             2300
-      Tungsten           2700
-      Halogen            3400
-      Fluorescent        4200
-      Daylight           5000
-
-    For Windows
-      Ember              1200
-      Candle             1900
-      Warm Incandescent  2300
-      Incandescent       2700
-      Halogen            3400
-      Fluorescent        4200
-      Daylight           5500
-
-**/
-
-
-/**
+ *  Presets
+ *  =======
+ *  These are custom presets that extend the native ones.
+ *  --- Note: All numbers are in Kelvin.
+ *  --- [Color Temperature](https://en.wikipedia.org/wiki/Color_temperature)
+ *    Dark Room             900 --- Note: the transition takes for-damn-ever.
+ *    Ember                1200
+ *    Candle               1900
+ *    Warm Incandescent    2300
+ *    Incandescent         2700 --- Note: The transition below 3000 is slow.
+ *    Halogen              3400
+ *    Fluorescent          4200
+ *    Daylight             5500
+ *    Off                  6500
+ *    Blue Period         27000
  *
- * Explanation:
-
-
-*/
-/* * * Notes:
+ *    !!! Darkroom also inverts the screen colors, only if you have enabled it via
+ *    accessibilty.
  *
+ *    Presets from the [F.lux FAQ page](https://justgetflux.com/faq.html):
+ *    For OSX
+ *      Candle             2300
+ *      Tungsten           2700
+ *      Halogen            3400
+ *      Fluorescent        4200
+ *      Daylight           5000
+ *
+ *    For Windows
+ *      Ember              1200
+ *      Candle             1900
+ *      Warm Incandescent  2300
+ *      Incandescent       2700
+ *      Halogen            3400
+ *      Fluorescent        4200
+ *      Daylight           5500
+ *
+ * Notes
+ * =====
  *
  * Features not supported:
  *    1. Movie Mode
@@ -101,10 +87,26 @@
  * Standard monitors output at
  *
  *
- */
+ **/
+// Workflow paths
+$home = exec( 'echo $HOME' );
+$data = "$home/Library/Application Support/Alfred 2/Workflow Data/com.spr.f.lux";
+
+// F.lux Preferences file
+$pref = "$home/Library/Preferences/org.herf.Flux.plist";
+
+// Make the data directory if it doesn't exist.
+if ( ! file_exists( $data ) ) {
+  mkdir( $data );
+}
 
 require_once( 'workflows.php' );
 require_once( 'control-functions.php' );
+
+echo getFluxTime();
+
+die();
+
 
 $w = new Workflows;
 
@@ -153,37 +155,6 @@ $w = new Workflows;
 //
 // EOB
 
-// set_error_handler(function ($errno, $errstr){
-//     throw new Exception($errstr);
-//     return false;
-// });
-// try{
-//     date_default_timezone_get();
-// }
-// catch(Exception $e){
-//   $tz = str_replace( '/Time Zone: /' , '' , exec( '/usr/sbin/systemsetup -gettimezone' ) );
-//   date_default_timezone_set( $tz );
-// }
-// restore_error_handler();
-//
-// echo timezone_offset_get( date_default_timezone_get() , 'GMT' );
-//
-// ini_set( 'date.default_latitude', '40.7111682' );
-// ini_set( 'date.default_longitude', '-73.95859569999999' );
-// print_r( date_sunset( $now ) );
-//
-// $theTime = time(); // specific date/time we're checking, in epoch seconds.
-//
-// $tz = new DateTimeZone('America/Los_Angeles');
-// $transition = $tz->getTransitions($theTime, $theTime);
-//
-// // only one array should be returned into $transition. Now get the data:
-// $offset = $transition[0]['offset'];
-// $abbr = $transition[0]['abbr'];
-//
-// echo "
-// $offset: $abbr";
-
 $presets = array(
   'Dark Room'         =>    900,
   'Ember'             =>   1200,
@@ -207,17 +178,7 @@ $prefs = array(
   'Location' => 'location'
 );
 
-// Workflow paths
-$home = exec( 'echo $HOME' );
-$data = "$home/Library/Application Support/Alfred 2/Workflow Data/com.spr.f.lux";
 
-// F.lux Preferences file
-$pref = "$home/Library/Preferences/org.herf.Flux.plist";
-
-// Make the data directory if it doesn't exist.
-if ( ! file_exists( $data ) ) {
-  mkdir( $data );
-}
 
 // Set Timezones and Lat/Lon if not set.
 // This pulls Lat/Lon from F.lux preferences, not from location services.
@@ -245,18 +206,21 @@ else
 $invert = "osascript -e 'tell application \"System Events\"' -e 'tell application processes' -e 'key code 28 using {command down, option down, control down}' -e 'end tell' -e 'end tell'";
 
 // Start Parsing Arguments
-if ( ! isset( $q ) ) {
+if ( ! isset( $q ) || $q == '' ) {
   // There are no arguments.
-  $w->result( '', '' , "Current Color Temp: $currentTemp" . "K (Night)", '', '', 'no', '' );
-  $w->result( 'color', 'color', 'Set Color Temp', '', '', 'no', 'color');
-  $w->result( 'set', 'set', 'Set Preference', '', '', 'no', 'set');
-  $w->result( 'disable', 'disable', 'Disable for an hour', '', '', 'yes', 'disable');
+  $w->result( '',        '',        "Current Color Temp: $currentTemp" . "K (Night)", '', '', 'no', '' );
+  $w->result( 'color',   'color',   'Set Color Temp',                                 '', '', 'no', 'color');
+  $w->result( 'set',     'set',     'Set Preference',                                 '', '', 'no', 'set');
+  $w->result( 'disable', 'disable', 'Disable for an hour',                            '', '', 'yes', 'disable');
 
   echo $w->toxml();
 
   // There is no argument, so let's just end here.
   die();
 }
+
+$w->result( 'disable', 'disable', "\$q = '$q'\" & args[0]= \"" . $args[0] . "\"", '', '', 'yes', 'disable');
+
 
 // Set something
 if ( strpos( $args[0] , 'set' ) !== FALSE ) {
@@ -273,7 +237,8 @@ if ( strpos( $args[0] , 'set' ) !== FALSE ) {
   // $val = $args[2];
 
 // Disable F.lux
-} elseif ( strpos( $args[0] , 'disa' ) !== FALSE ) { // Disable
+} else if ( strpos( $args[0] , 'disa' ) === 0 ) { // Disable
+$w->result( 'disable', 'disable', 'Disable for an hour',   '', '', 'yes', 'disable');
   $now = shell_exec( 'date +"%s"' );
   if ( count( $args ) > 1 ) {
 
@@ -284,12 +249,14 @@ if ( strpos( $args[0] , 'set' ) !== FALSE ) {
     unset( $args[0] );
     $time = implode( ' ', $args );
     $time = `./date.sh parseTime "$time"`;
-    echo $time;
+
   } else {
     $val = 3600; // Sleep for one hour by default
     $msg = "Disable Flux for an hour.";
   }
-} elseif ( strpos( $args[0] , 'col' ) !== FALSE ) {
+
+
+} elseif ( strpos( $args[0] , 'c' ) !== FALSE ) {
   foreach ( $presets as $preset => $temperature ) {
     if ( isDay() )
       $now = "Night";

@@ -1,7 +1,9 @@
 <?php
 
-
-// Control F.lux
+// Control F.
+//
+// This function has to be run per file. Whatever. It's fine.
+preemptDateErrors();
 
 function getPref( $key ) {
   global $pref;
@@ -125,9 +127,9 @@ function getSunrise() {
 }
 
 function getSunset() {
-  // Get the sunrise & sunset
-  $now     = time();
-  $sunset = date_sunset( $now );
+
+  $now = time();
+  $sunset  = date_sunset( $now );
 
   // This checks for DST, I think that it shouldn't affect those who aren't in
   // timezones with DST, but, well, let's flag it as a potential problem.
@@ -164,30 +166,38 @@ function getFluxTime() {
   $time = localtime( time() );
   $time = $time[1] + ( $time[2] * 60 );
 
+  // F.lux sets "lateTime" to be nine hours before you wake up.
+  $lateTime = ( $wakeTime - ( 9 * 60 ) );
+
+  // Did you set 'extra hour for kids'?
+  if ( $under18 == 1 )
+    $lateTime -= 60;
+
   // Do you want to sleep in on a weekend? And, is it?
-  if ( $sleepLate === 1 ) {
+  // Also, I haven't fully tested this. I don't know if it pushes back the waketime
+  // or if it pushes up the sleep time. I'll do that later.
+  if ( $sleepLate == 1 ) {
     $day = date( 'D', time() );
     if ( $day == 'Sun' || $day == 'Sat' ) {
       $wakeTime += 60;
     }
   }
 
-  // Did you set 'extra hour for kids'?
-  if ( $under18 === 1 )
-    $wakeTime += 60;
+  // Late time is after Midnight; Compensate
+  if ( $lateTime < 0 ) {
+    $lateTime = 1440 + $lateTime;
+  }
 
+  // Okay, so this is a cop-out in that I'm assuming that you've set things so
+  // as you wake up before sunset. Otherwise, this will be borked. But, seriously,
+  // if you're waking up after sunset, why are you using f.lux?
   if ( ( $time > $wakeTime ) && ( $time < $sunset ) )
     return 'day';
-  else if ( ( $time > $wakeTime ) && ( $time > $sunset ) && ( $time < ( $wakeTime - 9 ) ) )
-    return 'sunset';
-  else
+  else if ( ( $time > $wakeTime ) && ( $time > $lateTime ) )
     return 'late';
+  else
+    return 'sunset';
 
   // We shouldn't get here, so this is an error.
   return FALSE;
-
-  // I need to figure out how it takes sunrise into account. I can't do that
-  // until tomorrow when the sun rises... because I don't want to reset my
-  // location data right now.
-
 }
