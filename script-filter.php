@@ -103,11 +103,6 @@ if ( ! file_exists( $data ) ) {
 require_once( 'workflows.php' );
 require_once( 'control-functions.php' );
 
-echo getFluxTime();
-
-die();
-
-
 $w = new Workflows;
 
 // cat << EOB
@@ -208,10 +203,13 @@ $invert = "osascript -e 'tell application \"System Events\"' -e 'tell applicatio
 // Start Parsing Arguments
 if ( ! isset( $q ) || $q == '' ) {
   // There are no arguments.
-  $w->result( '',        '',        "Current Color Temp: $currentTemp" . "K (Night)", '', '', 'no', '' );
-  $w->result( 'color',   'color',   'Set Color Temp',                                 '', '', 'no', 'color');
-  $w->result( 'set',     'set',     'Set Preference',                                 '', '', 'no', 'set');
-  $w->result( 'disable', 'disable', 'Disable for an hour',                            '', '', 'yes', 'disable');
+  $time = ucwords( getFluxTime() );
+  $w->result( '',        '',         "Current Color Temp: $currentTemp" . "K ($time)", '',                                                    '', 'no', '' );
+  $w->result( 'color',   'color',    'Set Current Color Temp',                         'Either as number or preset.',                         '', 'no', 'color');
+  $w->result( 'set',     'set',      'Set Preference',                                 '',                                                    '', 'no', 'set');
+  $w->result( 'disable', 'disable',  'Disable for an hour',                            '',                                                    '', 'yes', 'disable');
+  $w->result( 'dark',    'darkroom', 'Enter Dark Room Mode',                           'You need to have the correct Accessibilty Settings.', '', 'yes', 'mood');
+  $w->result( 'mood',    'mood',     'Enter Mood Lighting Mode',                       'Don\'t use this when actively using you computer.',   '', 'yes', 'mood');
 
   echo $w->toxml();
 
@@ -219,31 +217,42 @@ if ( ! isset( $q ) || $q == '' ) {
   die();
 }
 
-$w->result( 'disable', 'disable', "\$q = '$q'\" & args[0]= \"" . $args[0] . "\"", '', '', 'yes', 'disable');
+// $w->result( 'disable', 'disable', "\$q = '$q'\" & args[0]= \"" . $args[0] . "\" &args[1]=\"" . $args[1] . "\"", '', '', 'yes', 'disable');
 
 
 // Set something
-if ( strpos( $args[0] , 'set' ) !== FALSE ) {
+if ( strpos( $args[0] , 'se' ) !== FALSE ) {
   if ( ! isset( $args[1] ) ) {
     foreach ( $prefs as $k => $v ) {
       $value = getPref( $v, $pref );
       if ( $v == "location" ) {
         $value = str_replace( ',' , ', ', $value );
       }
-      $w->result( '', $v, $k, "Current: $value", '', 'yes', '');
+      if ( $v == 'wakeTime' ) {
+        $value = floor( $value / 60 ) . ":" . $value % 60;
+        $w->result( '', $v, $k, "Current: $value (24 hour time)", '', 'yes', '');
+      } else {
+        $w->result( '', $v, $k, "Current: $value", '', 'yes', '');
+      }
+
     }
   }
   // $key = $args[1];
   // $val = $args[2];
 
 // Disable F.lux
-} else if ( strpos( $args[0] , 'disa' ) === 0 ) { // Disable
-$w->result( 'disable', 'disable', 'Disable for an hour',   '', '', 'yes', 'disable');
+} else if ( stripos( $args[0] , 'd' ) === 0 ) { // Disable
   $now = shell_exec( 'date +"%s"' );
   if ( count( $args ) > 1 ) {
 
-    if ( ( count( $args ) == 2 ) && ( ! is_numeric( $args[1] ) ) ) {
-
+    if ( ( count( $args ) >= 2 ) && ( ! is_numeric( $args[0] ) ) ) {
+      unset( $args[0] );
+      $time = implode( ' ', $args );
+      $time = `./date.sh parseTime $time`;
+      $readable = `./date.sh secondsToHumanTime $time`;
+      $w->result( '', $time, "Disable F.lux for $readable.", '', '' , '', 'yes', 'disable');
+    } else {
+      $w->result( 'disable', 'disable', 'Disable for an hour',   '', '', 'yes', 'disable');
     }
 
     unset( $args[0] );
@@ -252,20 +261,48 @@ $w->result( 'disable', 'disable', 'Disable for an hour',   '', '', 'yes', 'disab
 
   } else {
     $val = 3600; // Sleep for one hour by default
-    $msg = "Disable Flux for an hour.";
+    $w->result( 'disable', 'disable', 'Disable for an hour.', 'Sets temperature to Day mode. If you want it off, then set the color preference to Off.', '', 'yes', 'disable');
   }
 
 
-} elseif ( strpos( $args[0] , 'c' ) !== FALSE ) {
-  foreach ( $presets as $preset => $temperature ) {
-    if ( isDay() )
-      $now = "Night";
-    else
-      $now = "Day";
+} elseif ( stripos( $args[0] , 'c' ) !== FALSE ) {
+  if ( count( $args ) >= 2 && $args[1] != '' ) {
+    if ( is_numeric( $args[1] ) ) {
+      $temperature = $args[1];
+      if ( $args[1] < 1000 || $args[1] > 27000 ) {
+        $subtitle = "The color temperature must be between 1000K and 27000K";
+        if ( $temperature < 1000 )
+          $temperature = 1000;
+        else
+          $temperature = 27000;
+      } else
+        $subtitle = "Set color temperature for \"" . ucwords( getFluxTime() ) . ".\"";
+        $w->result( '', 'disable', "Set current color temp to " . $temperature . "K",  $subtitle, '', 'yes', 'disable');
+    } else {
+      foreach ( $presets as $k => $v ) {
+        if ( stripos( $k, $args[1] ) !== FALSE ) {
+          $w->result( '', "$v", "Set current color temp to " . $k . ".", "Temperature: $v" . "K", '', 'yes', 'disable');
+        }
+      }
+    }
+  } else {
+    foreach ( $presets as $preset => $temperature ) {
+      if ( isDay() )
+        $now = "Night";
+      else
+        $now = "Day";
 
-    $w->result( '', "color-$preset", "Set $now color to $preset",
-      "(Temperature: $temperature)", '', 'no', '' );
+      $w->result( '', "color-$preset", "Set $now color to $preset",
+        "(Temperature: $temperature)", '', 'no', '' );
+    }
   }
+} elseif ( stripos( $args[0] , 're' ) !== FALSE ) {
+  // Are these the correct defaults? I can't seem to find them.
+  $defaults = "Day: 6500K, Night: 3400K, Late: 3400K.";
+  $w->result( 'reset', 'reset', "Reset Temperatures to Defaults.",  $defaults, '', 'yes', 'disable');
+} elseif ( stripos( $args[0] , 'm' ) !== FALSE ) {
+  // Go to the "mood lighting"
+  $w->result( 'mood', 'mood', "Enter into Mood Lighting Mode.",  "Note: don't actively use your computer with this option.", '', 'yes', 'disable');
 } else {
   $w->result( '', 'set', 'Set Preference', '', '', 'no', 'set');
 }

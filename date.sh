@@ -70,7 +70,7 @@ secondsToHumanTime() {
 ################################################################################
 # Parses non-standard arguments
 parseTime() {
-  arg=$1
+  arg=$*
   arg=`echo "$arg"|sed 's/^ *//g'|sed 's/ *$//g'`
 
   args=(${arg// / })
@@ -122,8 +122,9 @@ parseTimeArg() {
 }
 
 function="$1"
-arg="$2"
 
-cmd="$function $arg"
+args=`echo $* | sed -e 's|'$function' ||g'`
+
+cmd="$function $args"
 
 ${cmd}
