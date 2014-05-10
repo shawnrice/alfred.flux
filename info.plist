@@ -6,6 +6,17 @@
 	<string>com.spr.f.lux</string>
 	<key>connections</key>
 	<dict>
+		<key>00461DF3-5F9C-4F69-807E-1DB7A0C99B7A</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>DCDBDC56-E1D0-476D-B72B-D23A74A640DB</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+		</array>
 		<key>1FAD0E0F-3D46-4AA5-8DE4-88CA69066BAE</key>
 		<array>
 			<dict>
@@ -28,17 +39,19 @@
 				<string></string>
 			</dict>
 		</array>
-		<key>92EC91E6-D586-41ED-9DFE-50CCBD6235F8</key>
+		<key>63C19FF5-B913-41D9-A005-297ED4AA5B48</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>A42BFAC5-12C2-4151-886A-BAA602CEB825</string>
+				<string>00461DF3-5F9C-4F69-807E-1DB7A0C99B7A</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 			</dict>
 		</array>
+		<key>92EC91E6-D586-41ED-9DFE-50CCBD6235F8</key>
+		<array/>
 	</dict>
 	<key>createdby</key>
 	<string>Shawn Patrick Rice</string>
@@ -50,31 +63,6 @@
 	<string>f.lux</string>
 	<key>objects</key>
 	<array>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>lastpathcomponent</key>
-				<false/>
-				<key>onlyshowifquerypopulated</key>
-				<false/>
-				<key>output</key>
-				<integer>0</integer>
-				<key>removeextension</key>
-				<false/>
-				<key>sticky</key>
-				<false/>
-				<key>text</key>
-				<string>Color temperature is now {query}K</string>
-				<key>title</key>
-				<string>Flux</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.output.notification</string>
-			<key>uid</key>
-			<string>A42BFAC5-12C2-4151-886A-BAA602CEB825</string>
-			<key>version</key>
-			<integer>0</integer>
-		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -142,6 +130,48 @@ defaults write /Users/$USER/Library/Preferences/org.herf.Flux nightColorTemp -in
 			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
 			<string>63C19FF5-B913-41D9-A005-297ED4AA5B48</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>127</integer>
+				<key>script</key>
+				<string>./action.sh "{query}"</string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>00461DF3-5F9C-4F69-807E-1DB7A0C99B7A</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>lastpathcomponent</key>
+				<false/>
+				<key>onlyshowifquerypopulated</key>
+				<false/>
+				<key>output</key>
+				<integer>0</integer>
+				<key>removeextension</key>
+				<false/>
+				<key>sticky</key>
+				<false/>
+				<key>text</key>
+				<string>{query}</string>
+				<key>title</key>
+				<string>Flux</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.notification</string>
+			<key>uid</key>
+			<string>DCDBDC56-E1D0-476D-B72B-D23A74A640DB</string>
 			<key>version</key>
 			<integer>0</integer>
 		</dict>
@@ -251,6 +281,11 @@ defaults write /Users/$USER/Library/Preferences/org.herf.Flux nightColorTemp -in
 	<string>Based on Benzi Ahamed’s flux workflow. Here, I’ve updated it to work with newer f.lux versions.</string>
 	<key>uidata</key>
 	<dict>
+		<key>00461DF3-5F9C-4F69-807E-1DB7A0C99B7A</key>
+		<dict>
+			<key>ypos</key>
+			<real>200</real>
+		</dict>
 		<key>0E429E93-9A08-4810-93E0-4B123B590539</key>
 		<dict>
 			<key>ypos</key>
@@ -274,7 +309,7 @@ defaults write /Users/$USER/Library/Preferences/org.herf.Flux nightColorTemp -in
 		<key>63C19FF5-B913-41D9-A005-297ED4AA5B48</key>
 		<dict>
 			<key>ypos</key>
-			<real>260</real>
+			<real>200</real>
 		</dict>
 		<key>8E254A43-AB21-46E5-93A1-8DDF07DF8725</key>
 		<dict>
@@ -286,10 +321,10 @@ defaults write /Users/$USER/Library/Preferences/org.herf.Flux nightColorTemp -in
 			<key>ypos</key>
 			<real>10</real>
 		</dict>
-		<key>A42BFAC5-12C2-4151-886A-BAA602CEB825</key>
+		<key>DCDBDC56-E1D0-476D-B72B-D23A74A640DB</key>
 		<dict>
 			<key>ypos</key>
-			<real>10</real>
+			<real>200</real>
 		</dict>
 	</dict>
 	<key>webaddress</key>

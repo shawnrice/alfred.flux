@@ -105,51 +105,27 @@ require_once( 'control-functions.php' );
 
 $w = new Workflows;
 
-// cat << EOB
-//
-// <?xml version="1.0"\?\>
-// <items>
-//   <item uid="flux.disable.hour" autocomplete="hour" arg="3600">
-//     <title>Disable for an hour</title>
-// 	<icon>2BDE72FE-FE79-462B-9B22-A67A6426DFAB.png</icon>
-//   </item>
-//   <item uid="flux.disable.minute" autocomplete="minute" arg="60">
-//     <title>Disable for a minute</title>
-// 	<icon>2BDE72FE-FE79-462B-9B22-A67A6426DFAB.png</icon>
-//   </item>
-// </items>
-//
-// EOB
-//
+// Check to see if f.lux is running.
+if ( `ps aux | grep Contents/MacOS/Flux | grep -v grep` == '' ) {
+  // It's not running, so show no options.
+  $w->result( 'start', 'start', 'F.lux is not active.', 'Open F.lux.', '', 'yes', 'start');
+  echo $w->toxml();
 
-// cat << EOB
-//
-// <?xml version="1.0"\?\>
-// <items>
-//   <item uid="flux.switchto.candle" arg="2300">
-//     <title>Set to candlelight</title>
-//     <icon>icon.png</icon>
-//   </item>
-//   <item uid="flux.switchto.tungsten" arg="2700">
-//     <title>Set to tungsten</title>
-//     <icon>icon.png</icon>
-//   </item>
-//   <item uid="flux.switchto.halogen" arg="3400">
-//     <title>Set to halogen</title>
-//     <icon>icon.png</icon>
-//   </item>
-//   <item uid="flux.switchto.fluorescent" arg="4100">
-//     <title>Set to fluorescent</title>
-//     <icon>icon.png</icon>
-//   </item>
-//   <item uid="flux.switchto.daylight" arg="6500">
-//     <title>Set to daylight</title>
-//     <icon>icon.png</icon>
-//   </item>
-// </items>
-//
-// EOB
+  // We're all done here, ladies and gents.
+  die();
+}
 
+if ( file_exists( "$data/darkroom" ) ) {
+  $w->result( 'restore', 'restore', 'Turn off darkroom mode.', 'The color transition back to normal will take a bit.', '', 'yes', 'restore' );
+  die();
+}
+
+if ( file_exists( "$data/mood" ) ) {
+  $w->result( 'restore', 'restore', 'Turn off mood lighting mode.', 'The color transition back to normal will take a bit.', '', 'yes', 'restore' );
+  die();
+}
+
+// Define the Presets
 $presets = array(
   'Dark Room'         =>    900,
   'Ember'             =>   1200,
@@ -163,8 +139,11 @@ $presets = array(
   'Blue Period'       =>  27000
 );
 
+// These are appearing weird in Alfred. We'll just sort them to make them
+// slightly less weird.
 ksort( $presets, SORT_NUMERIC );
 
+// Preferences available to set.
 $prefs = array(
   'Late Color' => 'lateColorTemp',
   'Night Color' => 'nightColorTemp',
@@ -172,8 +151,6 @@ $prefs = array(
   'Wake Time' => 'wakeTime',
   'Location' => 'location'
 );
-
-
 
 // Set Timezones and Lat/Lon if not set.
 // This pulls Lat/Lon from F.lux preferences, not from location services.
@@ -185,7 +162,7 @@ if ( isset( $argv[1] ) ) {
   $args = explode( ' ', $q );
 }
 
-
+// Get variables if defined, and set them if they are.
 $dayColorTemp = getPref( 'dayColorTemp', $pref );
 if ( ! $dayColorTemp ) {
   exec( 'defaults write dayColorTemp -integer 6500' );
@@ -193,10 +170,21 @@ if ( ! $dayColorTemp ) {
 }
 $nightColorTemp = getPref( 'nightColorTemp', $pref );
 
-if ( isDay() )
-  $currentTemp = $dayColorTemp;
-else
-  $currentTemp = $nightColorTemp;
+$state = getFluxTime();
+switch( $state ) :
+  case 'day':
+    $currentTemp = $dayColorTemp;
+    break;
+  case 'sunset':
+    $currentTemp = $nightColorTemp;
+    break;
+  case 'late':
+    $currentTemp = $lateColorTemp;
+    break;
+  default:
+    $borked = TRUE;
+    break;
+endswitch;
 
 $invert = "osascript -e 'tell application \"System Events\"' -e 'tell application processes' -e 'key code 28 using {command down, option down, control down}' -e 'end tell' -e 'end tell'";
 
@@ -208,11 +196,10 @@ if ( ! isset( $q ) || $q == '' ) {
   $w->result( 'color',   'color',    'Set Current Color Temp',                         'Either as number or preset.',                         '', 'no', 'color');
   $w->result( 'set',     'set',      'Set Preference',                                 '',                                                    '', 'no', 'set');
   $w->result( 'disable', 'disable',  'Disable for an hour',                            '',                                                    '', 'yes', 'disable');
-  $w->result( 'dark',    'darkroom', 'Enter Dark Room Mode',                           'You need to have the correct Accessibilty Settings.', '', 'yes', 'mood');
+  $w->result( 'darkroom','darkroom', 'Enter Dark Room Mode',                           'You need to have the correct Accessibilty Settings.', '', 'yes', 'darkroom');
   $w->result( 'mood',    'mood',     'Enter Mood Lighting Mode',                       'Don\'t use this when actively using you computer.',   '', 'yes', 'mood');
 
   echo $w->toxml();
-
   // There is no argument, so let's just end here.
   die();
 }
@@ -221,7 +208,7 @@ if ( ! isset( $q ) || $q == '' ) {
 
 
 // Set something
-if ( strpos( $args[0] , 'se' ) !== FALSE ) {
+if ( strpos( $args[0] , 'se' ) === 0 ) {
   if ( ! isset( $args[1] ) ) {
     foreach ( $prefs as $k => $v ) {
       $value = getPref( $v, $pref );
@@ -237,11 +224,9 @@ if ( strpos( $args[0] , 'se' ) !== FALSE ) {
 
     }
   }
-  // $key = $args[1];
-  // $val = $args[2];
 
 // Disable F.lux
-} else if ( stripos( $args[0] , 'd' ) === 0 ) { // Disable
+} else if ( stripos( $args[0] , 'di' ) === 0 ) { // Disable
   $now = shell_exec( 'date +"%s"' );
   if ( count( $args ) > 1 ) {
 
@@ -250,9 +235,9 @@ if ( strpos( $args[0] , 'se' ) !== FALSE ) {
       $time = implode( ' ', $args );
       $time = `./date.sh parseTime $time`;
       $readable = `./date.sh secondsToHumanTime $time`;
-      $w->result( '', $time, "Disable F.lux for $readable.", '', '' , '', 'yes', 'disable');
+      $w->result( '', "disable-$time", "Disable F.lux for $readable.", 'This sets night to day, temporarily.', '' , '', 'yes', 'disable');
     } else {
-      $w->result( 'disable', 'disable', 'Disable for an hour',   '', '', 'yes', 'disable');
+      $w->result( 'disable', 'disable', 'Disable for an hour', 'This sets night to day, temporarily.', '', 'yes', 'disable');
     }
 
     unset( $args[0] );
@@ -264,8 +249,8 @@ if ( strpos( $args[0] , 'se' ) !== FALSE ) {
     $w->result( 'disable', 'disable', 'Disable for an hour.', 'Sets temperature to Day mode. If you want it off, then set the color preference to Off.', '', 'yes', 'disable');
   }
 
-
-} elseif ( stripos( $args[0] , 'c' ) !== FALSE ) {
+// Set the Color temperature for the current state
+} elseif ( stripos( $args[0] , 'c' ) === 0 ) {
   if ( count( $args ) >= 2 && $args[1] != '' ) {
     if ( is_numeric( $args[1] ) ) {
       $temperature = $args[1];
@@ -277,32 +262,50 @@ if ( strpos( $args[0] , 'se' ) !== FALSE ) {
           $temperature = 27000;
       } else
         $subtitle = "Set color temperature for \"" . ucwords( getFluxTime() ) . ".\"";
-        $w->result( '', 'disable', "Set current color temp to " . $temperature . "K",  $subtitle, '', 'yes', 'disable');
+        $w->result( "color-$temperature", "color-$temperature", "Set current color temp to " . $temperature . "K",  $subtitle, '', 'yes', $temperature);
     } else {
       foreach ( $presets as $k => $v ) {
         if ( stripos( $k, $args[1] ) !== FALSE ) {
-          $w->result( '', "$v", "Set current color temp to " . $k . ".", "Temperature: $v" . "K", '', 'yes', 'disable');
+          $w->result( "color-$k", "color-$v", "Set current color temp to " . $k . ".", "Temperature: $v" . "K", '', 'yes', "$k");
         }
       }
     }
   } else {
     foreach ( $presets as $preset => $temperature ) {
-      if ( isDay() )
-        $now = "Night";
-      else
-        $now = "Day";
+      switch( getFluxTime() ) :
+        case 'day':
+          $now = 'Day';
+          break;
+        case 'sunset':
+          $now = 'Sunset';
+          break;
+        case 'late':
+          $now = 'Late';
+          break;
+        default:
+          $borked = TRUE;
+          break;
+      endswitch;
 
-      $w->result( '', "color-$preset", "Set $now color to $preset",
-        "(Temperature: $temperature)", '', 'no', '' );
+      $w->result( '', "color-$preset", "Set $now color to $preset", "(Temperature: $temperature)", '', 'yes', "$preset" );
     }
   }
-} elseif ( stripos( $args[0] , 're' ) !== FALSE ) {
+
+// Reset f.lux to default values.
+} elseif ( stripos( $args[0] , 're' ) === 0 ) {
   // Are these the correct defaults? I can't seem to find them.
   $defaults = "Day: 6500K, Night: 3400K, Late: 3400K.";
   $w->result( 'reset', 'reset', "Reset Temperatures to Defaults.",  $defaults, '', 'yes', 'disable');
-} elseif ( stripos( $args[0] , 'm' ) !== FALSE ) {
-  // Go to the "mood lighting"
-  $w->result( 'mood', 'mood', "Enter into Mood Lighting Mode.",  "Note: don't actively use your computer with this option.", '', 'yes', 'disable');
+
+// Go to mood lighting.
+} elseif ( stripos( $args[0] , 'm' ) === 0 ) {
+  $w->result( 'mood', 'mood', "Enter into Mood Lighting Mode.",  'Note: don\'t actively use your computer with this option.', '', 'yes', 'disable');
+
+// Go to Dark Room.
+} elseif ( stripos( $args[0] , 'da' ) === 0 ) {
+  $w->result( 'darkroom', 'darkroom', "Enter into Dark Room Mode.",  'You need to have the correct Accessibilty Settings.', '', 'yes', 'darkroom');
+
+// Whoops. Fallback.
 } else {
   $w->result( '', 'set', 'Set Preference', '', '', 'no', 'set');
 }

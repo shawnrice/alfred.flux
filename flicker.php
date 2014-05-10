@@ -1,24 +1,7 @@
 <?php
 
-// Mac
-// Candle: 2300K
-// Tungsten: 2700K
-// Halogen: 3400K
-// Fluorescent: 4200K
-// Daylight: 5000K
-
-// Windows
-// Ember: 1200K
-// Candle: 1900K
-// Warm Incandescent: 2300K
-// Incandescent: 2700K
-// Halogen: 3400K
-// Fluorescent: 4200K
-// Daylight: 5500K
-
-// $now = `date +"%s"` + date( 'Z' );
-
-
+$home = exec( 'echo $HOME' );
+$data = "$home/Library/Application Support/Alfred 2/Workflow Data/com.spr.f.lux";
 
 $levels = array(  'dark'     => array( 'lower'  =>        1,
                                       'upper'   =>   200000
@@ -65,6 +48,8 @@ if ( isset( $argv[3] ) ) {
   else if ( file_exists( $argv[3] ) ) {
     $duration = $argv[3];
   }
+} else {
+  $duration = 250;
 }
 
 
@@ -107,7 +92,7 @@ function flicker( $levels = array( 'lower' => 0 , 'upper' => 1000000 ),
     }
 
     if ( mt_rand( 0, 100 ) > 85 )
-      $speed[ 'lower' ] = 5000;
+      $sleep = mt_rand( 5000, 10000 );
     else
       $sleep = mt_rand( $speed[ 'lower' ],  $speed[ 'upper' ]  );
     if ( mt_rand( 0, 100) > 90 ) {
