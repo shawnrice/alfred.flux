@@ -38,7 +38,6 @@ restoreFlux() {
 
 
 # Arguments that need to be parsed.
-
 if [[ $q =~ "color" ]]; then
   if [ -f "$data/mood" ]; then
     rm "$data/mood"
@@ -46,9 +45,18 @@ if [[ $q =~ "color" ]]; then
   if [ -f "$data/darkroom" ]; then
     rm "$data/darkroom"
   fi
-  echo $q
+  q=${q#color-}
+  color=${q#*-}
+  state=${q%-*}
+  if [ "$state" = "sunset" ]; then
+    state="night"
+  fi
+  defaults write $HOME/Library/Preferences/org.herf.Flux.plist "$state"ColorTemp -integer "$color"
+  echo "Color has been set to $color."
+  exit 0
 fi
 
+# Disable
 if [[ $q =~ "disable" ]]; then
   if [ -f "$data/mood" ]; then
     rm "$data/mood"
@@ -56,25 +64,62 @@ if [[ $q =~ "disable" ]]; then
   if [ -f "$data/darkroom" ]; then
     rm "$data/darkroom"
   fi
-  echo $q
+  if [ $q = 'disable' ]; then
+    nohup php disable.php 3600  > /dev/null 2>&1 &
+    echo "F.lux has been disabled for one hour."
+  elif [ $q = 'sunrise' ]; then
+    nohup php disable.php sunrise  > /dev/null 2>&1 &
+    echo "F.lux has been disabled until sunrise."
+  else
+    nohup php disable.php ${q##disable-} > /dev/null 2>&1 &
+    readable=`./date.sh secondsToHumanTime ${q##disable-}`
+    echo "F.lux has been disabled for $readable"
+  fi
+  exit 0
 fi
 
 if [[ $q =~ "set-" ]]; then
-  echo $q
+  q=${q#set-}
+  key=${q%-*}
+  value=${q#*-}
+  if [ $key = "wakeTime" ]; then
+    if [[ $value =~ : ]]; then
+      hour=${value%":"*}
+      minute=${value#*":"}
+      value=$(( hour*60 + minute ))
+    else
+      echo "Error: 'wakeTime' must be set in HH:MM format."
+      exit 0
+    fi
+  else
+    if [[ $value < 1000 ]]; then
+      value=1000
+    elif [[ $value > 27000 ]]; then
+      value=27000
+    fi
+  fi
+  defaults write $HOME/Library/Preferences/org.herf.Flux.plist "$key" -integer "$value"
+  echo "Set $key."
+  exit 0
 fi
 
 # Simple arguments... for now.
 
+# Just open flux
 if [[ $q = "open" ]]; then
-  open /Applications/Flux.app
+  if [ -d "/Applications/Flux.app" ]; then
+    open /Applications/Flux.app
+  fi
+  exit 0
 fi
 
+# Restore flux from mood/darkroom/disable. Might be overdoing it.
 if [[ $q = "restore" ]]; then
+  restoreFlux
+
   if [ -f "$data/mood" ]; then
     rm "$data/mood"
-
     restoreFlux
-    
     echo "Restoring F.lux to normal. Please be patient."
   fi
   if [ -f "$data/darkroom" ]; then
@@ -87,14 +132,14 @@ if [[ $q = "restore" ]]; then
       -e 'end tell'
     echo "Restoring F.lux to normal. Please be patient."
   fi
-
-
-
-
-
-
+  if [ -f "$data/disable" ]; then
+    rm "$data/disable"
+    restoreFlux
+  fi
+  exit 0
 fi
 
+# Send it to darkroom mode
 if [[ $q = "darkroom" ]]; then
   saveColors
   setUniform 1000
@@ -106,28 +151,32 @@ if [[ $q = "darkroom" ]]; then
     -e 'end tell'
 
   touch "$data/darkroom"
-  nohup ./darkroom.sh > /dev/null 2>&1 &
 
   echo Darkroom Mode has started.
+  exit 0
 fi
 
+# Enter Mood lighting mode
 if [[ $q = "mood" ]]; then
   saveColors
   setUniform 2400
 
+# Options for flicker.php... we're only allowing dark and windy for now.
 # dark, dim, normal, bright
 # calm, breeze, windy, hurricane
 
   touch "$data/mood"
-  osascript open-canvas.scpt
-  nohup php flicker.php > /dev/null 2>&1 &
+
+  nohup php flicker.php 'dark' 'windy' "$data/mood" > /dev/null 2>&1 &
   echo Mood lighting shall now commence.
+  exit 0
 fi
 
+# Reset Values
 if [[ $q = "reset" ]]; then
-  # defaults read $HOME/Library/Preferences/org.herf.Flux.plist nightColorTemp
-  defaults write $HOME/Library/Preferences/org.herf.Flux.plist nightColorTemp -integer 6000
+  defaults write $HOME/Library/Preferences/org.herf.Flux.plist nightColorTemp -integer 3400
   defaults write $HOME/Library/Preferences/org.herf.Flux.plist dayColorTemp -integer 6500
   defaults write $HOME/Library/Preferences/org.herf.Flux.plist lateColorTemp -integer 3400
   echo "F.lux has been reset to defaults. (Day: 6500; Night: 3400; Late: 3400)"
+  exit 0
 fi

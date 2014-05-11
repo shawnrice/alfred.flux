@@ -84,10 +84,13 @@
  * Features not supported:
  *    1. Movie Mode
  *       -- Cannot because I don't know F.lux's settings.
- * Standard monitors output at
+ * Standard displays have their whitepoint at 6500K.
  *
+ * Disable for an... is partially supported.
+ * Darkroom is partially supported.
  *
  **/
+
 // Workflow paths
 $home = exec( 'echo $HOME' );
 $data = "$home/Library/Application Support/Alfred 2/Workflow Data/com.spr.f.lux";
@@ -105,6 +108,24 @@ require_once( 'control-functions.php' );
 
 $w = new Workflows;
 
+if ( file_exists( "$data/darkroom" ) ) {
+  $w->result( 'restore', 'restore', 'Turn off darkroom mode.', 'The color transition back to normal will take a bit.', '', 'yes', 'restore' );
+  echo $w->toxml();
+  die();
+}
+
+if ( file_exists( "$data/mood" ) ) {
+  $w->result( 'restore', 'restore', 'Turn off mood lighting mode.', 'The color transition back to normal will take a bit.', '', 'yes', 'restore' );
+  echo $w->toxml();
+  die();
+}
+
+if ( file_exists( "$data/disable" ) ) {
+  $w->result( 'restore', 'restore', 'Re-enable Flux.', 'Please wait for the color transition.', '', 'yes', 'restore' );
+  echo $w->toxml();
+  die();
+}
+
 // Check to see if f.lux is running.
 if ( `ps aux | grep Contents/MacOS/Flux | grep -v grep` == '' ) {
   // It's not running, so show no options.
@@ -112,16 +133,6 @@ if ( `ps aux | grep Contents/MacOS/Flux | grep -v grep` == '' ) {
   echo $w->toxml();
 
   // We're all done here, ladies and gents.
-  die();
-}
-
-if ( file_exists( "$data/darkroom" ) ) {
-  $w->result( 'restore', 'restore', 'Turn off darkroom mode.', 'The color transition back to normal will take a bit.', '', 'yes', 'restore' );
-  die();
-}
-
-if ( file_exists( "$data/mood" ) ) {
-  $w->result( 'restore', 'restore', 'Turn off mood lighting mode.', 'The color transition back to normal will take a bit.', '', 'yes', 'restore' );
   die();
 }
 
@@ -149,7 +160,7 @@ $prefs = array(
   'Night Color' => 'nightColorTemp',
   'Day Color' => 'dayColorTemp',
   'Wake Time' => 'wakeTime',
-  'Location' => 'location'
+  // 'Location' => 'location'
 );
 
 // Set Timezones and Lat/Lon if not set.
@@ -169,7 +180,7 @@ if ( ! $dayColorTemp ) {
   $dayColorTemp = 6500;
 }
 $nightColorTemp = getPref( 'nightColorTemp', $pref );
-
+$lateColorTemp = getPref( 'lateColorTemp', $pref );
 $state = getFluxTime();
 switch( $state ) :
   case 'day':
@@ -204,12 +215,9 @@ if ( ! isset( $q ) || $q == '' ) {
   die();
 }
 
-// $w->result( 'disable', 'disable', "\$q = '$q'\" & args[0]= \"" . $args[0] . "\" &args[1]=\"" . $args[1] . "\"", '', '', 'yes', 'disable');
-
-
 // Set something
-if ( strpos( $args[0] , 'se' ) === 0 ) {
-  if ( ! isset( $args[1] ) ) {
+if ( strpos( $args[0] , 's' ) === 0 ) {
+  if ( ! isset( $args[1] ) || $args[1] == '' ) {
     foreach ( $prefs as $k => $v ) {
       $value = getPref( $v, $pref );
       if ( $v == "location" ) {
@@ -217,11 +225,35 @@ if ( strpos( $args[0] , 'se' ) === 0 ) {
       }
       if ( $v == 'wakeTime' ) {
         $value = floor( $value / 60 ) . ":" . $value % 60;
-        $w->result( '', $v, $k, "Current: $value (24 hour time)", '', 'yes', '');
+        $w->result( "set-$v", $v, $k, "Current: $value (24 hour time)", '', 'no', "set $v");
       } else {
-        $w->result( '', $v, $k, "Current: $value", '', 'yes', '');
+        $w->result( "set-$v", $v, $k, "Current: $value", '', 'no', "set $v");
       }
 
+    }
+  } else if ( ( ! isset( $args[2] ) ) || ( $args[2] == '' ) ) {
+    $value = getPref( $args[1], $pref );
+    $v = $args[1];
+    if ( in_array( $v, $prefs ) )
+      $w->result( "set-$v", "$v", "Set $v", "Current: $value", '', 'no', "set $v" );
+    else
+      $w->result( "", "", "There is no preference by that name.", "", '', 'no', "" );
+  } else {
+    $value = getPref( $args[1], $pref );
+    $v = $args[1];
+    $new = $args[2];
+    if ( in_array( $v, $prefs ) ) {
+      $numeric = array('lateColorTemp', 'dayColorTemp', 'nightColorTemp');
+      if ( in_array( $v, $numeric ) ) {
+        if ( $new > 27000 || $new < 1000 )
+          $w->result( "set-$v", "set-$v-1000", "Set $v to 1000", "Value must be between 1000 and 27000.", '', 'yes', '' );
+        else
+          $w->result( "set-$v", "set-$v-$new", "Set $v to $new", "Current: $value", '', 'yes', '' );
+      } else {
+        $w->result( "set-$v", "set-$v-$new", "Set $v to $new", "Value must be in 24hr time (hh:mm).", '', 'yes', '' );
+      }
+    } else {
+      $w->result( "", "", "There is no preference by that name.", "", '', 'no', "" );
     }
   }
 
@@ -236,8 +268,6 @@ if ( strpos( $args[0] , 'se' ) === 0 ) {
       $time = `./date.sh parseTime $time`;
       $readable = `./date.sh secondsToHumanTime $time`;
       $w->result( '', "disable-$time", "Disable F.lux for $readable.", 'This sets night to day, temporarily.', '' , '', 'yes', 'disable');
-    } else {
-      $w->result( 'disable', 'disable', 'Disable for an hour', 'This sets night to day, temporarily.', '', 'yes', 'disable');
     }
 
     unset( $args[0] );
@@ -245,12 +275,13 @@ if ( strpos( $args[0] , 'se' ) === 0 ) {
     $time = `./date.sh parseTime "$time"`;
 
   } else {
-    $val = 3600; // Sleep for one hour by default
-    $w->result( 'disable', 'disable', 'Disable for an hour.', 'Sets temperature to Day mode. If you want it off, then set the color preference to Off.', '', 'yes', 'disable');
+    // Sleep for one hour by default
+    $w->result( 'disable-3600', 'disable', 'Disable for an hour.', 'Sets temperature to Day mode. If you want it off, then set the color preference to Off.', '', 'yes', 'disable');
   }
 
 // Set the Color temperature for the current state
 } elseif ( stripos( $args[0] , 'c' ) === 0 ) {
+  $state = getFluxTime();
   if ( count( $args ) >= 2 && $args[1] != '' ) {
     if ( is_numeric( $args[1] ) ) {
       $temperature = $args[1];
@@ -262,11 +293,11 @@ if ( strpos( $args[0] , 'se' ) === 0 ) {
           $temperature = 27000;
       } else
         $subtitle = "Set color temperature for \"" . ucwords( getFluxTime() ) . ".\"";
-        $w->result( "color-$temperature", "color-$temperature", "Set current color temp to " . $temperature . "K",  $subtitle, '', 'yes', $temperature);
+        $w->result( "color-$state-$temperature", "color-$state-$temperature", "Set current color temp to " . $temperature . "K",  $subtitle, '', 'yes', $temperature);
     } else {
       foreach ( $presets as $k => $v ) {
         if ( stripos( $k, $args[1] ) !== FALSE ) {
-          $w->result( "color-$k", "color-$v", "Set current color temp to " . $k . ".", "Temperature: $v" . "K", '', 'yes', "$k");
+          $w->result( "color-$state-$k", "color-$state-$v", "Set current color temp to " . $k . ".", "Temperature: $v" . "K", '', 'yes', "$k");
         }
       }
     }
@@ -287,7 +318,7 @@ if ( strpos( $args[0] , 'se' ) === 0 ) {
           break;
       endswitch;
 
-      $w->result( '', "color-$preset", "Set $now color to $preset", "(Temperature: $temperature)", '', 'yes', "$preset" );
+      $w->result( 'color-$state-$temperature', "color-$state-$temperature", "Set $now color to $preset", "(Temperature: $temperature)", '', 'yes', "$preset" );
     }
   }
 

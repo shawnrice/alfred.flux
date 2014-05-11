@@ -58,7 +58,7 @@ $preset = array( $level , $speed );
 
 // Open a nice blank canvas.
 `open background.html`;
-time_nanosleep( 0, 1000000 );
+time_nanosleep( 0, 5000000 );
 // Send the web browser into full screen
 `osascript "open-canvas.scpt"`;
 // `defaults write $HOME/Library/Preferences/org.herf.Flux.plist nightColorTemp -integer 2300`;

@@ -112,9 +112,11 @@ function isDay() {
 /**
  * [getSunrise description]
  */
-function getSunrise() {
+function getSunrise( $now = '' ) {
   // Get the sunrise & sunset
-  $now     = time();
+  if ( $now == '' )
+    $now = time();
+
   $sunrise = date_sunrise( $now );
 
   // This checks for DST, I think that it shouldn't affect those who aren't in
@@ -193,10 +195,12 @@ function getFluxTime() {
   // if you're waking up after sunset, why are you using f.lux?
   if ( ( $time > $wakeTime ) && ( $time < $sunset ) )
     return 'day';
-  else if ( ( $time > $wakeTime ) && ( $time > $lateTime ) )
-    return 'late';
-  else
+  else if ( ( $lateTime > $wakeTime ) && ( $time > $sunset ) && ( $time < $lateTime ) )
     return 'sunset';
+  else if ( ( $lateTime < $wakeTime ) && ( $time > $sunset ) )
+    return 'sunset';
+  else
+    return 'late';
 
   // We shouldn't get here, so this is an error.
   return FALSE;
