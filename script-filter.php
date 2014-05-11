@@ -47,7 +47,7 @@
  *  These are custom presets that extend the native ones.
  *  --- Note: All numbers are in Kelvin.
  *  --- [Color Temperature](https://en.wikipedia.org/wiki/Color_temperature)
- *    Dark Room             900 --- Note: the transition takes for-damn-ever.
+ *    Dark Room            1000 --- Note: the transition takes for-damn-ever.
  *    Ember                1200
  *    Candle               1900
  *    Warm Incandescent    2300
@@ -138,7 +138,7 @@ if ( `ps aux | grep Contents/MacOS/Flux | grep -v grep` == '' ) {
 
 // Define the Presets
 $presets = array(
-  'Dark Room'         =>    900,
+  'Dark Room'         =>   1000,
   'Ember'             =>   1200,
   'Candle'            =>   1900,
   'Warm Incandescent' =>   2300,

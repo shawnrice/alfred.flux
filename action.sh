@@ -64,6 +64,7 @@ if [[ $q =~ "disable" ]]; then
   if [ -f "$data/darkroom" ]; then
     rm "$data/darkroom"
   fi
+  saveColors
   if [ $q = 'disable' ]; then
     nohup php disable.php 3600  > /dev/null 2>&1 &
     echo "F.lux has been disabled for one hour."
@@ -92,14 +93,14 @@ if [[ $q =~ "set-" ]]; then
       exit 0
     fi
   else
-    if [[ $value < 1000 ]]; then
+    if [[ $value -lt 1000 ]]; then
       value=1000
-    elif [[ $value > 27000 ]]; then
+    elif [[ $value -gt 27000 ]]; then
       value=27000
     fi
   fi
   defaults write $HOME/Library/Preferences/org.herf.Flux.plist "$key" -integer "$value"
-  echo "Set $key."
+  echo "Set $key $value."
   exit 0
 fi
 
@@ -135,6 +136,7 @@ if [[ $q = "restore" ]]; then
   if [ -f "$data/disable" ]; then
     rm "$data/disable"
     restoreFlux
+    echo "Re-enabling Flux."
   fi
   exit 0
 fi

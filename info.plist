@@ -17,22 +17,22 @@
 				<string></string>
 			</dict>
 		</array>
-		<key>1FAD0E0F-3D46-4AA5-8DE4-88CA69066BAE</key>
+		<key>31605F54-518C-4C42-BAAD-9713B3C70B22</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>5992158E-B383-4A9A-99F0-E9E1472EF2C7</string>
+				<string>DCDBDC56-E1D0-476D-B72B-D23A74A640DB</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
 				<string></string>
 			</dict>
 		</array>
-		<key>2BDE72FE-FE79-462B-9B22-A67A6426DFAB</key>
+		<key>391BCDBC-0320-4023-9ECB-2B858484C318</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>0E429E93-9A08-4810-93E0-4B123B590539</string>
+				<string>31605F54-518C-4C42-BAAD-9713B3C70B22</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -50,8 +50,6 @@
 				<string></string>
 			</dict>
 		</array>
-		<key>92EC91E6-D586-41ED-9DFE-50CCBD6235F8</key>
-		<array/>
 	</dict>
 	<key>createdby</key>
 	<string>Shawn Patrick Rice</string>
@@ -63,49 +61,6 @@
 	<string>f.lux</string>
 	<key>objects</key>
 	<array>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>argumenttype</key>
-				<integer>1</integer>
-				<key>escaping</key>
-				<integer>63</integer>
-				<key>keyword</key>
-				<string>flux</string>
-				<key>script</key>
-				<string></string>
-				<key>title</key>
-				<string>Change the color temperature using F.lux</string>
-				<key>type</key>
-				<integer>0</integer>
-				<key>withspace</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.scriptfilter</string>
-			<key>uid</key>
-			<string>92EC91E6-D586-41ED-9DFE-50CCBD6235F8</string>
-			<key>version</key>
-			<integer>0</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>escaping</key>
-				<integer>63</integer>
-				<key>script</key>
-				<string>USER=$(whoami)
-defaults write /Users/$USER/Library/Preferences/org.herf.Flux nightColorTemp -integer {query}</string>
-				<key>type</key>
-				<integer>0</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>8E254A43-AB21-46E5-93A1-8DDF07DF8725</string>
-			<key>version</key>
-			<integer>0</integer>
-		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -178,50 +133,17 @@ defaults write /Users/$USER/Library/Preferences/org.herf.Flux nightColorTemp -in
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>lastpathcomponent</key>
-				<false/>
-				<key>onlyshowifquerypopulated</key>
-				<false/>
-				<key>output</key>
+				<key>escaping</key>
+				<integer>127</integer>
+				<key>script</key>
+				<string>./action.sh disable-3600</string>
+				<key>type</key>
 				<integer>0</integer>
-				<key>removeextension</key>
-				<false/>
-				<key>sticky</key>
-				<false/>
-				<key>text</key>
-				<string>Flux is now disabled</string>
-				<key>title</key>
-				<string>Flux</string>
 			</dict>
 			<key>type</key>
-			<string>alfred.workflow.output.notification</string>
+			<string>alfred.workflow.action.script</string>
 			<key>uid</key>
-			<string>0E429E93-9A08-4810-93E0-4B123B590539</string>
-			<key>version</key>
-			<integer>0</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>lastpathcomponent</key>
-				<false/>
-				<key>onlyshowifquerypopulated</key>
-				<false/>
-				<key>output</key>
-				<integer>0</integer>
-				<key>removeextension</key>
-				<false/>
-				<key>sticky</key>
-				<false/>
-				<key>text</key>
-				<string>Flux is now enabled</string>
-				<key>title</key>
-				<string>Flux</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.output.notification</string>
-			<key>uid</key>
-			<string>5992158E-B383-4A9A-99F0-E9E1472EF2C7</string>
+			<string>31605F54-518C-4C42-BAAD-9713B3C70B22</string>
 			<key>version</key>
 			<integer>0</integer>
 		</dict>
@@ -229,50 +151,18 @@ defaults write /Users/$USER/Library/Preferences/org.herf.Flux nightColorTemp -in
 			<key>config</key>
 			<dict>
 				<key>argumenttype</key>
-				<integer>1</integer>
-				<key>escaping</key>
-				<integer>63</integer>
+				<integer>2</integer>
 				<key>keyword</key>
-				<string>flux</string>
-				<key>script</key>
-				<string></string>
-				<key>title</key>
-				<string>Disable for an hour</string>
-				<key>type</key>
-				<integer>0</integer>
+				<string>disflux</string>
+				<key>text</key>
+				<string>Disable Flux for an Hour</string>
 				<key>withspace</key>
-				<true/>
+				<false/>
 			</dict>
 			<key>type</key>
-			<string>alfred.workflow.input.scriptfilter</string>
+			<string>alfred.workflow.input.keyword</string>
 			<key>uid</key>
-			<string>2BDE72FE-FE79-462B-9B22-A67A6426DFAB</string>
-			<key>version</key>
-			<integer>0</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>escaping</key>
-				<integer>63</integer>
-				<key>script</key>
-				<string>USER=$(whoami)
-NIGHT=$(defaults read /Users/$USER/Library/Preferences/org.herf.Flux nightColorTemp)
-DAY=$(defaults read /Users/$USER/Library/Preferences/org.herf.Flux dayColorTemp)
-if [ $DAY == ""]; then
-DAY=$(echo 6500)
-fi
-defaults write /Users/$USER/Library/Preferences/org.herf.Flux nightColorTemp -integer $DAY
-sleep {query}
-defaults write /Users/$USER/Library/Preferences/org.herf.Flux nightColorTemp -integer $NIGHT
-</string>
-				<key>type</key>
-				<integer>0</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>1FAD0E0F-3D46-4AA5-8DE4-88CA69066BAE</string>
+			<string>391BCDBC-0320-4023-9ECB-2B858484C318</string>
 			<key>version</key>
 			<integer>0</integer>
 		</dict>
@@ -286,40 +176,20 @@ defaults write /Users/$USER/Library/Preferences/org.herf.Flux nightColorTemp -in
 			<key>ypos</key>
 			<real>200</real>
 		</dict>
-		<key>0E429E93-9A08-4810-93E0-4B123B590539</key>
+		<key>31605F54-518C-4C42-BAAD-9713B3C70B22</key>
 		<dict>
 			<key>ypos</key>
-			<real>310</real>
+			<real>320</real>
 		</dict>
-		<key>1FAD0E0F-3D46-4AA5-8DE4-88CA69066BAE</key>
+		<key>391BCDBC-0320-4023-9ECB-2B858484C318</key>
 		<dict>
 			<key>ypos</key>
-			<real>590</real>
-		</dict>
-		<key>2BDE72FE-FE79-462B-9B22-A67A6426DFAB</key>
-		<dict>
-			<key>ypos</key>
-			<real>450</real>
-		</dict>
-		<key>5992158E-B383-4A9A-99F0-E9E1472EF2C7</key>
-		<dict>
-			<key>ypos</key>
-			<real>430</real>
+			<real>320</real>
 		</dict>
 		<key>63C19FF5-B913-41D9-A005-297ED4AA5B48</key>
 		<dict>
 			<key>ypos</key>
 			<real>200</real>
-		</dict>
-		<key>8E254A43-AB21-46E5-93A1-8DDF07DF8725</key>
-		<dict>
-			<key>ypos</key>
-			<real>50</real>
-		</dict>
-		<key>92EC91E6-D586-41ED-9DFE-50CCBD6235F8</key>
-		<dict>
-			<key>ypos</key>
-			<real>10</real>
 		</dict>
 		<key>DCDBDC56-E1D0-476D-B72B-D23A74A640DB</key>
 		<dict>
