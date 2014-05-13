@@ -108,9 +108,16 @@ fi
 
 # Just open flux
 if [[ $q = "open" ]]; then
-  if [ -d "/Applications/Flux.app" ]; then
+  if [ -e "/Applications/Flux.app" ]; then
     open /Applications/Flux.app
+    echo "Opening F.lux"
+  elif [ -e "$HOME/Applications/Flux.app" ]; then
+    open "$HOME/Applications/Flux.app"
+    echo "Opening F.lux"
+  else
+    echo "Cannot find F.lux. Please open it manually."
   fi
+
   exit 0
 fi
 

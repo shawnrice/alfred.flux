@@ -1,14 +1,11 @@
 <?php
 
-// Control F.
-//
-// This function has to be run per file. Whatever. It's fine.
-preemptDateErrors();
+// Control F.lux
 
 function getPref( $key ) {
   global $pref;
 
-  return exec( "defaults read $pref $key" );
+  return exec( "defaults read $pref $key 2> /dev/null" );
 }
 
 function setPref( $key , $value , $interger = TRUE) {
@@ -145,8 +142,8 @@ function getSunset() {
 function preemptDateErrors() {
   //// Make sure that timezones and lat/long are set
   if ( ! ini_get('date.timezone') ) {
-    $tz = str_replace( '/Time Zone: /' , '' , exec( '/usr/sbin/systemsetup -gettimezone' ) );
-    date_default_timezone_set( $tz );
+    $tz = exec( 'tz=`ls -l /etc/localtime` && echo ${tz#*/zoneinfo/}' );
+    ini_set( 'date.timezone', $tz );
   }
 
   $latlong = explode( ',', getPref( 'location' ) );
@@ -158,6 +155,8 @@ function preemptDateErrors() {
 
 function getFluxTime() {
   global $pref;
+
+
 
   $sleepLate = getPref( 'sleepLate' );
   $under18   = getPref( 'under18' );

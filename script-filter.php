@@ -106,6 +106,11 @@ if ( ! file_exists( $data ) ) {
 require_once( 'workflows.php' );
 require_once( 'control-functions.php' );
 
+// Set Timezones and Lat/Lon if not set.
+// This pulls Lat/Lon from F.lux preferences, not from location services.
+preemptDateErrors();
+$tz = str_replace( '/Time Zone: /' , '' , exec( '/usr/sbin/systemsetup -gettimezone' ) );
+ini_set( 'date.default_timezone', $tz );
 $w = new Workflows;
 
 if ( file_exists( "$data/darkroom" ) ) {
@@ -163,9 +168,7 @@ $prefs = array(
   // 'Location' => 'location'
 );
 
-// Set Timezones and Lat/Lon if not set.
-// This pulls Lat/Lon from F.lux preferences, not from location services.
-preemptDateErrors();
+
 
 // Parse {query} if there is one.
 if ( isset( $argv[1] ) ) {
@@ -176,7 +179,7 @@ if ( isset( $argv[1] ) ) {
 // Get variables if defined, and set them if they are.
 $dayColorTemp = getPref( 'dayColorTemp', $pref );
 if ( ! $dayColorTemp ) {
-  exec( 'defaults write dayColorTemp -integer 6500' );
+  exec( "defaults write $pref dayColorTemp -integer 6500" );
   $dayColorTemp = 6500;
 }
 $nightColorTemp = getPref( 'nightColorTemp', $pref );
